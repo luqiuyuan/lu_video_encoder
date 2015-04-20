@@ -37,8 +37,11 @@ private:
 
 	static uint8_t ENDCODE[];
 
-	// default bitrate in bit (1M/s)
-	static const int DEFAULT_BITRATE = 1000000;
+	// default bitrate in bit (8Mbits/s)
+	static const int DEFAULT_BITRATE = 8000000;
+
+	// default quantization parameter (30)
+	static string DEFAULT_H264_QP;
 
 	// default fps
 	static const int DEFAULT_FPS = 25;
@@ -55,6 +58,8 @@ private:
 	int frameN;	// presentation timestamp. Default -1. Use it as ++ frameN.
 
 	int got_output;	// flag of avcodec_encode_video2, no need to initialize.
+
+	bool disable_bitrate_control;
 
 	/**
 	 * flush the buffered frames to the file and close the codec
@@ -82,6 +87,14 @@ public:
 	~VideoEncoder();
 
 	/**
+	 * initializing codec. Seperate it from the constructor to enable user-controled parameters
+	 * 
+	 * @param none
+	 * @return none
+	 */
+	void init();
+
+	/**
 	 * encode a frame of BGR Mat
 	 * 
 	 * @param input BGR Mat of type CV_8UC3
@@ -107,6 +120,22 @@ public:
 	 * @return true if flush is successful, false otherwise
 	 */
 	bool flush_close();
+
+	/**
+	 * set quantization parameter
+	 * 
+	 * @param qp 0-69. 0 is lossless.
+	 * @return none
+	 */
+	void setQP(int qp);
+
+	/**
+	 * bit rate control is used by default. Calling disableBitrateControl switch to fixed quantization parameter
+	 * 
+	 * @param none
+	 * @return none
+	 */
+	void disableBitrateControl();
 
 };
 

@@ -4,27 +4,36 @@ uint8_t VideoEncoder::ENDCODE[] = {0, 0, 1, 0xb7};
 
 string VideoEncoder::DEFAULT_H264_PRESET = "medium";
 
-VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): resolution(resolution), video_codec(video_codec), c(NULL), frameN(-1) {
+string VideoEncoder::DEFAULT_H264_QP = "30";
+
+VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): resolution(resolution), video_codec(video_codec), c(NULL), frameN(-1), disable_bitrate_control(false), initialization_flag(0) {
 	// temperal variables declaration
 	int result;
 
 	output = fopen(filepath.c_str(), "wb");
 	if(!output) {
     	cerr<<"Error: video_encoder.cpp: Could not open "<<filepath<<endl;
-    	initialization_flag = -1;
+        initialization_flag = -1;
     	return;
     }
+}
 
+VideoEncoder::~VideoEncoder() {
+	fclose(output);
+}
+
+void VideoEncoder::init() {
     /* register all the codecs */
     avcodec_register_all();
 
     AVCodecID video_codec_id;
     if(video_codec == VIDEO_CODEC_H264)
-    	video_codec_id = AV_CODEC_ID_H264;
-    else {	// invalid codec option. use default video codec
-    	cerr<<"Warning: video_encoder.cpp: Invalid video codec option: "<<video_codec<<". Default video codec H.264 is used."<<endl;
-    	video_codec_id = AV_CODEC_ID_H264;
-    	initialization_flag = 1;
+        video_codec_id = AV_CODEC_ID_H264;
+    else {  // invalid codec option. use default video codec
+        cerr<<"Warning: video_encoder.cpp: Invalid video codec option: "<<video_codec<<". Default video codec H.264 is used."<<endl;
+        video_codec_id = AV_CODEC_ID_H264;
+        initialization_flag = 1;
+        return;
     }
 
     AVCodec* codec;
@@ -37,13 +46,13 @@ VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): r
 
     c = avcodec_alloc_context3(codec);
     if(!c) {
-    	cerr<<"Error: video_encoder.cpp: Could not allocate video codec context"<<endl;
-    	initialization_flag = -3;
-    	return;
+        cerr<<"Error: video_encoder.cpp: Could not allocate video codec context"<<endl;
+        initialization_flag = -3;
+        return;
     }
 
     /* put sample parameters */
-    c->bit_rate = DEFAULT_BITRATE;
+    c->bit_rate = DEFAULT_BITRATE;  // bitrate control
     /* resolution must be a multiple of two */
     c->width = resolution.width;
     c->height = resolution.height;
@@ -57,45 +66,39 @@ VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): r
      */
     c->gop_size = DEFAULT_SIZE_GOP;
     c->max_b_frames = DEFAULT_B_FRAME;
-    c->pix_fmt = AV_PIX_FMT_YUV444P;	// use AV_PIX_FMT_YUV444P to facilitate data transfer from cv::Mat
+    c->pix_fmt = AV_PIX_FMT_YUV444P;    // use AV_PIX_FMT_YUV444P to facilitate data transfer from cv::Mat
 
-    if (video_codec_id == AV_CODEC_ID_H264){
-       av_opt_set(c->priv_data, "preset", DEFAULT_H264_PRESET.c_str(), 0);	// use H.264 preset
-       string qp = "0";
-       av_opt_set(c->priv_data, "qp", qp.c_str(), 0);
-       string verbose = "40";
-       av_opt_set(c->priv_data, "verbose", verbose.c_str(), 0);
+    if (video_codec_id == AV_CODEC_ID_H264) {
+        av_opt_set(c->priv_data, "preset", DEFAULT_H264_PRESET.c_str(), 0);  // use H.264 preset
+        if(disable_bitrate_control)
+            av_opt_set(c->priv_data, "qp", DEFAULT_H264_QP.c_str(), 0);  // set quantization parameter
     }
 
     /* open codec */
     if (avcodec_open2(c, codec, NULL) < 0) {
-    	cerr<<"Error: video_encoder.cpp: Could not open codec"<<endl;
-    	initialization_flag = -4;
-    	return;
- 	}
+        cerr<<"Error: video_encoder.cpp: Could not open codec"<<endl;
+        initialization_flag = -4;
+        return;
+    }
 
- 	// allocate frame
- 	av_frame = av_frame_alloc();
+    // allocate frame
+    av_frame = av_frame_alloc();
     if(!av_frame) {
-    	cerr<<"Error: video_encoder.cpp: Could not allocate video frame"<<endl;
-    	initialization_flag = -5;
-    	return;
+        cerr<<"Error: video_encoder.cpp: Could not allocate video frame"<<endl;
+        initialization_flag = -5;
+        return;
     }
     av_frame->format = c->pix_fmt;
     av_frame->width = c->width;
     av_frame->height = c->height;
 
     // allocate raw picture buffer
-    result = av_image_alloc(av_frame->data, av_frame->linesize, c->width, c->height, c->pix_fmt, 32);
+    int result = av_image_alloc(av_frame->data, av_frame->linesize, c->width, c->height, c->pix_fmt, 32);
     if(result < 0) {
-    	cerr<<"Error: video_encoder: Could not allocate raw picture buffer"<<endl;
-    	initialization_flag  = -6;
-    	return;
+        cerr<<"Error: video_encoder: Could not allocate raw picture buffer"<<endl;
+        initialization_flag  = -6;
+        return;
     }
-}
-
-VideoEncoder::~VideoEncoder() {
-	fclose(output);
 }
 
 bool VideoEncoder::write(const Mat& frame) {
@@ -225,4 +228,18 @@ Mat VideoEncoder::BGR2YUV(const Mat& input){
     }
 
     return output;
+}
+
+void VideoEncoder::setQP(int qp) {
+    // pre-condition
+    if(qp < 0)
+        qp = 0;
+    if(qp > 69)
+        qp = 69;
+
+    DEFAULT_H264_QP = to_string(qp);
+}
+
+void VideoEncoder::disableBitrateControl() {
+    disable_bitrate_control = true;
 }

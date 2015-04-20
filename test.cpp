@@ -18,6 +18,8 @@ int main() {
 	int height = cap.get(CV_CAP_PROP_FRAME_HEIGHT);
 
 	VideoEncoder encoder("./output/office.h264", Size(width, height), VideoEncoder::VIDEO_CODEC_H264);
+	encoder.disableBitrateControl();
+	encoder.init();
 	int initialization_flag = encoder.getInitializationFlag();
 	if(initialization_flag < 0) {
 		cerr<<"Error: main.cpp: Video encoder initialization failed with error code: "<<initialization_flag<<endl;
