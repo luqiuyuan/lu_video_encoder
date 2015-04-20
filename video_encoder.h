@@ -40,20 +40,44 @@ private:
 	// default bitrate in bit (8Mbits/s)
 	static const int DEFAULT_BITRATE = 8000000;
 
+	// bitrate in bit
+	int bitrate;
+
 	// default quantization parameter (30)
 	static string DEFAULT_H264_QP;
+
+	// quantization parameter
+	string h264_qp;
 
 	// default fps
 	static const int DEFAULT_FPS = 25;
 
+	// fps
+	int fps;
+
 	// default size of GOP
 	static const int DEFAULT_SIZE_GOP = 300;
+
+	// size of GOP
+	int size_gop;
 
 	// default max B frames between I or P frames
 	static const int DEFAULT_B_FRAME = 3;
 
+	// max B frames between I or P frames
+	int b_frame;
+
 	// default H.264 preset (medium)
 	static string DEFAULT_H264_PRESET;
+
+	// h264 preset
+	string h264_preset;
+
+	// default H.264 profile
+	static string DEFAULT_H264_PROFILE;
+
+	// H.264 profile
+	string h264_profile;
 
 	int frameN;	// presentation timestamp. Default -1. Use it as ++ frameN.
 
@@ -128,6 +152,54 @@ public:
 	 * @return none
 	 */
 	void setQP(int qp);
+
+	/**
+	 * set bitrate
+	 * 
+	 * @param bitrate in bits/s
+	 * @return none
+	 */
+	void setBitrate(int bitrate);
+
+	/**
+	 * set fps
+	 * 
+	 * @param fps
+	 * @return none
+	 */
+	void setFPS(int fps);
+
+	/**
+	 * set size of GOP
+	 * 
+	 * @param size_gop
+	 * @return none
+	 */
+	void setSizeGOP(int size_gop);
+
+	/**
+	 * set max B frames between I or P frames
+	 * 
+	 * @param b_frame
+	 * @return none
+	 */
+	void setBFrame(int b_frame);
+
+	/**
+	 * set h.264 preset
+	 * 
+	 * @param preset string
+	 * @return none
+	 */
+	void setPreset(string preset);
+
+	/**
+	 * set h.264 profile
+	 * 
+	 * @param profile string
+	 * @return none
+	 */
+	void setProfile(string profile);
 
 	/**
 	 * bit rate control is used by default. Calling disableBitrateControl switch to fixed quantization parameter

@@ -19,6 +19,7 @@ int main() {
 
 	VideoEncoder encoder("./output/office.h264", Size(width, height), VideoEncoder::VIDEO_CODEC_H264);
 	encoder.disableBitrateControl();
+	encoder.setQP(15);
 	encoder.init();
 	int initialization_flag = encoder.getInitializationFlag();
 	if(initialization_flag < 0) {

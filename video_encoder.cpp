@@ -6,7 +6,9 @@ string VideoEncoder::DEFAULT_H264_PRESET = "medium";
 
 string VideoEncoder::DEFAULT_H264_QP = "30";
 
-VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): resolution(resolution), video_codec(video_codec), c(NULL), frameN(-1), disable_bitrate_control(false), initialization_flag(0) {
+string VideoEncoder::DEFAULT_H264_PROFILE = "high444";
+
+VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): resolution(resolution), video_codec(video_codec), c(NULL), frameN(-1), disable_bitrate_control(false), initialization_flag(0), h264_profile(DEFAULT_H264_PROFILE), h264_preset(DEFAULT_H264_PRESET), b_frame(DEFAULT_B_FRAME), size_gop(DEFAULT_SIZE_GOP), fps(DEFAULT_FPS), h264_qp(DEFAULT_H264_QP), bitrate(DEFAULT_BITRATE) {
 	// temperal variables declaration
 	int result;
 
@@ -52,26 +54,27 @@ void VideoEncoder::init() {
     }
 
     /* put sample parameters */
-    c->bit_rate = DEFAULT_BITRATE;  // bitrate control
+    c->bit_rate = bitrate;  // bitrate control
     /* resolution must be a multiple of two */
     c->width = resolution.width;
     c->height = resolution.height;
     /* frames per second */
-    c->time_base = (AVRational){1,DEFAULT_FPS};
+    c->time_base = (AVRational){1,fps};
     /* emit one intra frame every ten frames
      * check frame pict_type before passing frame
      * to encoder, if frame->pict_type is AV_PICTURE_TYPE_I
      * then gop_size is ignored and the output of encoder
      * will always be I frame irrespective to gop_size
      */
-    c->gop_size = DEFAULT_SIZE_GOP;
-    c->max_b_frames = DEFAULT_B_FRAME;
+    c->gop_size = size_gop;
+    c->max_b_frames = b_frame;
     c->pix_fmt = AV_PIX_FMT_YUV444P;    // use AV_PIX_FMT_YUV444P to facilitate data transfer from cv::Mat
 
     if (video_codec_id == AV_CODEC_ID_H264) {
-        av_opt_set(c->priv_data, "preset", DEFAULT_H264_PRESET.c_str(), 0);  // use H.264 preset
+        av_opt_set(c->priv_data, "profile", h264_profile.c_str(), 0);
+        av_opt_set(c->priv_data, "preset", h264_preset.c_str(), 0);  // use H.264 preset
         if(disable_bitrate_control)
-            av_opt_set(c->priv_data, "qp", DEFAULT_H264_QP.c_str(), 0);  // set quantization parameter
+            av_opt_set(c->priv_data, "qp", h264_qp.c_str(), 0);  // set quantization parameter
     }
 
     /* open codec */
@@ -237,7 +240,43 @@ void VideoEncoder::setQP(int qp) {
     if(qp > 69)
         qp = 69;
 
-    DEFAULT_H264_QP = to_string(qp);
+    h264_qp = to_string(qp);
+}
+
+void VideoEncoder::setBitrate(int bitrate) {
+    this->bitrate = bitrate;
+}
+
+void VideoEncoder::setFPS(int fps) {
+    // pre-condition
+    if(fps < 1)
+        fps = 1;
+
+    this->fps = fps;
+}
+
+void VideoEncoder::setSizeGOP(int size_gop) {
+    // pre-condition
+    if(size_gop < 1)
+        size_gop = 1;
+
+    this->size_gop = size_gop;
+}
+
+void VideoEncoder::setBFrame(int b_frame) {
+    // pre-condition
+    if(b_frame < 0)
+        b_frame = 0;
+
+    this->b_frame = b_frame;
+}
+
+void VideoEncoder::setPreset(string preset) {
+    this->h264_preset = preset;
+}
+
+void VideoEncoder::setProfile(string profile) {
+    this->h264_profile = profile;
 }
 
 void VideoEncoder::disableBitrateControl() {
