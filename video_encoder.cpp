@@ -282,3 +282,24 @@ void VideoEncoder::setProfile(string profile) {
 void VideoEncoder::disableBitrateControl() {
     disable_bitrate_control = true;
 }
+
+vector<unsigned char> VideoEncoder::RGB2YUV(vector<unsigned char> rgb) {
+    unsigned char r = rgb[0];
+    unsigned char g = rgb[1];
+    unsigned char b = rgb[2];
+
+    unsigned char y;
+    unsigned char u;
+    unsigned char v;
+    y = ((66*r + 129*g +25*b + 128) >> 8) + 16;
+    u = ((-38*r - 74*g + 112*b + 128) >> 8) + 128;
+    v = ((112*r - 94*g - 18*b + 128) >> 8) + 128;
+
+    // construct the return value
+    vector<unsigned char> yuv(3);
+    yuv[0] = y;
+    yuv[1] = u;
+    yuv[2] = v;
+
+    return yuv;
+}

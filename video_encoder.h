@@ -1,9 +1,8 @@
 #ifndef __LU_VIDEO_ENCODER__
 #define __LU_VIDEO_ENCODER__
 
-#include "YUV_RGB_conversion.h"
-
 #include <string>
+#include <vector>
 
 #include <opencv2/opencv.hpp>
 
@@ -101,6 +100,13 @@ private:
 	 * @return YUV Mat of type CV_8UC3. It shares different memory from the input Mat.
 	 */
 	Mat BGR2YUV(const Mat& input);
+
+	/**
+	 * Convert RGB to YUV
+	 * @param rgb A vector of 3 containing R, G and B components. The range is [0,255]
+	 * @return A vector of 3 containing Y, U and V components. The first element is Y. The range is [0,255]
+	 */
+	vector<unsigned char> RGB2YUV(vector<unsigned char> rgb);
 
 public:
 
