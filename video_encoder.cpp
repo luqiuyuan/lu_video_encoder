@@ -9,9 +9,6 @@ string VideoEncoder::DEFAULT_H264_QP = "30";
 string VideoEncoder::DEFAULT_H264_PROFILE = "high444";
 
 VideoEncoder::VideoEncoder(string filepath, Size resolution, int video_codec): resolution(resolution), video_codec(video_codec), c(NULL), frameN(-1), disable_bitrate_control(false), initialization_flag(0), h264_profile(DEFAULT_H264_PROFILE), h264_preset(DEFAULT_H264_PRESET), b_frame(DEFAULT_B_FRAME), size_gop(DEFAULT_SIZE_GOP), fps(DEFAULT_FPS), h264_qp(DEFAULT_H264_QP), bitrate(DEFAULT_BITRATE) {
-	// temperal variables declaration
-	int result;
-
 	output = fopen(filepath.c_str(), "wb");
 	if(!output) {
     	cerr<<"Error: video_encoder.cpp: Could not open "<<filepath<<endl;
