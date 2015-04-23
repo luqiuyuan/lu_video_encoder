@@ -4,7 +4,7 @@ uint8_t VideoEncoder::ENDCODE[] = {0, 0, 1, 0xb7};
 
 string VideoEncoder::DEFAULT_H264_PRESET = "medium";
 
-string VideoEncoder::DEFAULT_H264_QP = "30";
+string VideoEncoder::DEFAULT_H264_QP = "0";
 
 string VideoEncoder::DEFAULT_H264_PROFILE = "high444";
 
@@ -71,6 +71,11 @@ void VideoEncoder::init() {
         av_opt_set(c->priv_data, "profile", h264_profile.c_str(), 0);
         av_opt_set(c->priv_data, "preset", h264_preset.c_str(), 0);  // use H.264 preset
         if(disable_bitrate_control)
+            // to set a parameter in x264
+            // use either
+            // av_opt_set(c->priv_data, "qp", "30", 0);
+            // or
+            // av_opt_set(c->priv_data, "x264opts", "qp=30", 0);
             av_opt_set(c->priv_data, "qp", h264_qp.c_str(), 0);  // set quantization parameter
     }
 
